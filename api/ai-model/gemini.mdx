@@ -1,0 +1,33 @@
+---
+title: "Google Gemini"
+description: "兼容 Google Generative Language API"
+sidebarTitle: "Gemini"
+---
+
+**POST** `/v1beta/models/{model}:generateContent`
+
+## 认证
+
+通过查询参数 `?key=sk-xxxx` 或请求头 `Authorization: Bearer sk-xxxx` 传递令牌。
+
+## 请求参数
+
+| 参数 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `contents` | array | 是 | 对话内容 |
+| `generationConfig` | object | 否 | 生成参数 |
+| `safetySettings` | array | 否 | 安全等级 |
+
+## 示例
+
+```bash
+curl "https://your-domain.com/v1beta/models/gemini-1.5-pro:generateContent?key=sk-xxxx" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contents": [{
+      "parts": [{"text": "你好"}]
+    }]
+  }'
+```
+
+流式接口：`:streamGenerateContent`

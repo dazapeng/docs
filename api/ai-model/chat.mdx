@@ -1,0 +1,68 @@
+---
+title: "对话补全 Chat Completions"
+description: "兼容 OpenAI Chat Completions 的对话接口"
+sidebarTitle: "对话补全"
+---
+
+## 请求
+
+**POST** `/v1/chat/completions`
+
+### 请求头
+
+| 名称 | 必填 | 说明 |
+| --- | --- | --- |
+| `Authorization` | 是 | `Bearer <令牌>` |
+| `Content-Type` | 是 | `application/json` |
+
+### 请求体参数
+
+| 参数 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `model` | string | 是 | 模型名称，如 `gpt-4o`、`claude-3-5-sonnet` |
+| `messages` | array | 是 | 对话消息列表 |
+| `stream` | boolean | 否 | 是否流式返回，默认 `false` |
+| `temperature` | number | 否 | 采样温度 0~2 |
+| `top_p` | number | 否 | 核采样阈值 |
+| `max_tokens` | integer | 否 | 最大生成 token 数 |
+| `tools` | array | 否 | 工具调用定义 |
+| `tool_choice` | string/object | 否 | 工具选择策略 |
+
+### 示例
+
+```bash
+curl https://your-domain.com/v1/chat/completions \
+  -H "Authorization: Bearer sk-xxxx" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-4o",
+    "messages": [
+      {"role": "system", "content": "你是有用的助手"},
+      {"role": "user", "content": "介绍一下量子计算"}
+    ],
+    "stream": true
+  }'
+```
+
+## 响应
+
+```json
+{
+  "id": "chatcmpl-xxx",
+  "object": "chat.completion",
+  "created": 1712000000,
+  "model": "gpt-4o",
+  "choices": [
+    {
+      "index": 0,
+      "message": {"role": "assistant", "content": "..."},
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 12,
+    "completion_tokens": 128,
+    "total_tokens": 140
+  }
+}
+```

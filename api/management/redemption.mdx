@@ -1,0 +1,47 @@
+---
+title: "兑换码管理"
+description: "兑换码（充值码）相关接口"
+sidebarTitle: "兑换码"
+---
+
+## 获取兑换码列表
+
+**GET** `/api/redemption/?p={page}&page_size={size}`
+
+## 获取兑换码详情
+
+**GET** `/api/redemption/{id}`
+
+## 创建兑换码
+
+**POST** `/api/redemption/`
+
+```json
+{
+  "name": "promo",
+  "quota": 500000,
+  "count": 10
+}
+```
+
+| 字段 | 说明 |
+| --- | --- |
+| `name` | 兑换码名称 |
+| `quota` | 面额（积分） |
+| `count` | 生成数量 |
+
+## 更新兑换码
+
+**PUT** `/api/redemption/`
+
+## 删除兑换码
+
+**DELETE** `/api/redemption/{id}`
+
+## 兑换
+
+**POST** `/api/user/topup`
+
+```json
+{"key": "REDEMPTION-CODE-STRING"}
+```

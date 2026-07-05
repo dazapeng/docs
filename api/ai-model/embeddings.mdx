@@ -1,0 +1,40 @@
+---
+title: "文本向量 Embeddings"
+description: "生成文本嵌入向量"
+sidebarTitle: "文本向量"
+---
+
+**POST** `/v1/embeddings`
+
+## 请求参数
+
+| 参数 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `model` | string | 是 | 如 `text-embedding-3-small` |
+| `input` | string \| array | 是 | 需要向量化的文本 |
+| `encoding_format` | string | 否 | `float` 或 `base64` |
+
+## 示例
+
+```bash
+curl https://your-domain.com/v1/embeddings \
+  -H "Authorization: Bearer sk-xxxx" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "text-embedding-3-small",
+    "input": "你好世界"
+  }'
+```
+
+## 响应
+
+```json
+{
+  "object": "list",
+  "data": [
+    {"object": "embedding", "index": 0, "embedding": [0.0023, -0.017, ...]}
+  ],
+  "model": "text-embedding-3-small",
+  "usage": {"prompt_tokens": 4, "total_tokens": 4}
+}
+```

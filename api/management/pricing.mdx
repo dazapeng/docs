@@ -1,0 +1,37 @@
+---
+title: "模型价格"
+description: "模型价格与倍率接口"
+sidebarTitle: "模型价格"
+---
+
+## 获取模型价格列表
+
+**GET** `/api/pricing`
+
+返回所有模型的提示/补全倍率。
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "model_name": "gpt-4o",
+      "model_ratio": 2.5,
+      "completion_ratio": 3,
+      "model_price": 0
+    }
+  ]
+}
+```
+
+## 字段说明
+
+| 字段 | 说明 |
+| --- | --- |
+| `model_ratio` | 提示倍率（1 倍 = \$0.002 / 1K tokens） |
+| `completion_ratio` | 补全倍率（相对提示） |
+| `model_price` | 按次计费（\>0 时优先使用） |
+
+## 更新模型价格
+
+在管理后台“模型倍率”中以 JSON 方式配置，系统将实时生效。

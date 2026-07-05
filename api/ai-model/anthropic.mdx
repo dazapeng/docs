@@ -1,0 +1,38 @@
+---
+title: "Anthropic Claude"
+description: "兼容 Anthropic Messages API"
+sidebarTitle: "Claude Messages"
+---
+
+**POST** `/v1/messages`
+
+## 请求头
+
+| 名称 | 必填 | 说明 |
+| --- | --- | --- |
+| `x-api-key` | 是 | 令牌，或使用 `Authorization: Bearer` |
+| `anthropic-version` | 是 | 如 `2023-06-01` |
+
+## 请求参数
+
+| 参数 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `model` | string | 是 | 如 `claude-3-5-sonnet-20241022` |
+| `messages` | array | 是 | 对话消息 |
+| `max_tokens` | integer | 是 | 最大生成 token |
+| `system` | string | 否 | 系统提示 |
+| `stream` | boolean | 否 | 是否流式 |
+
+## 示例
+
+```bash
+curl https://your-domain.com/v1/messages \
+  -H "x-api-key: sk-xxxx" \
+  -H "anthropic-version: 2023-06-01" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "claude-3-5-sonnet-20241022",
+    "max_tokens": 1024,
+    "messages": [{"role": "user", "content": "你好"}]
+  }'
+```

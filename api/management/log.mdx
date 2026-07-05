@@ -1,0 +1,41 @@
+---
+title: "日志查询"
+description: "调用日志相关接口"
+sidebarTitle: "日志"
+---
+
+## 获取日志列表（管理员）
+
+**GET** `/api/log/`
+
+### 查询参数
+
+| 参数 | 说明 |
+| --- | --- |
+| `p` | 页码 |
+| `page_size` | 每页数量 |
+| `type` | 日志类型（1=充值, 2=消费, 3=管理, 4=系统） |
+| `username` | 用户名 |
+| `token_name` | 令牌名 |
+| `model_name` | 模型名 |
+| `start_timestamp` | 开始时间戳 |
+| `end_timestamp` | 结束时间戳 |
+| `channel` | 渠道 ID |
+
+## 获取当前用户日志
+
+**GET** `/api/log/self`
+
+参数同上，结果限制为当前用户。
+
+## 日志统计
+
+**GET** `/api/log/stat`
+
+返回指定时间段内的总额度、调用次数等统计信息。
+
+## 模型使用统计
+
+**GET** `/api/log/self/stat`
+
+返回当前用户各模型使用情况。

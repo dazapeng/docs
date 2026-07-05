@@ -1,0 +1,33 @@
+---
+title: "Midjourney"
+description: "兼容 midjourney-proxy 的绘图接口"
+sidebarTitle: "Midjourney"
+---
+
+## 提交任务
+
+| 接口 | 方法 | 说明 |
+| --- | --- | --- |
+| `/mj/submit/imagine` | POST | 文生图 |
+| `/mj/submit/change` | POST | U/V 变换 |
+| `/mj/submit/blend` | POST | 图片混合 |
+| `/mj/submit/describe` | POST | 图生文 |
+| `/mj/submit/action` | POST | 按钮动作 |
+
+## 查询任务
+
+| 接口 | 方法 | 说明 |
+| --- | --- | --- |
+| `/mj/task/{id}/fetch` | GET | 查询单个任务 |
+| `/mj/task/list-by-condition` | POST | 条件查询 |
+
+## 示例：文生图
+
+```bash
+curl https://your-domain.com/mj/submit/imagine \
+  -H "Authorization: Bearer sk-xxxx" \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "a cat on the moon --ar 16:9"}'
+```
+
+响应包含 `result` 字段作为任务 ID，用于后续查询。

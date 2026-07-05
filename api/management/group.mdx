@@ -1,0 +1,27 @@
+---
+title: "分组管理"
+description: "用户分组与分组倍率"
+sidebarTitle: "分组"
+---
+
+## 获取分组列表
+
+**GET** `/api/group/`
+
+## 获取当前用户可用分组
+
+**GET** `/api/user/groups`
+
+## 设置分组倍率
+
+分组倍率在系统设置中以 JSON 形式配置：
+
+```json
+{
+  "default": 1,
+  "vip": 0.8,
+  "svip": 0.5
+}
+```
+
+保存后，相关分组的用户将以对应倍率扣费。

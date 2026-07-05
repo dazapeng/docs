@@ -1,0 +1,49 @@
+---
+title: "API 接入总览"
+description: "AiSDK 对外调用方式总览，包含鉴权、Base URL、模型传参和常见调用链路"
+sidebarTitle: "API 接入总览"
+icon: "book-open"
+---
+
+AiSDK 对外优先提供 **OpenAI 兼容风格**接口。
+
+## 基本信息
+
+- **Base URL**：`https://your-domain/v1`
+- **鉴权方式**：`Authorization: Bearer <YOUR_API_KEY>`
+- **内容类型**：`application/json`
+
+## 主要接口
+
+| 能力 | 方法 | 路径 |
+| --- | --- | --- |
+| 文生图片 | POST | `/v1/images/generations` |
+| 图片编辑 | POST | `/v1/images/edits` |
+| 文生视频 | POST | `/v1/videos` |
+| 兼容旧视频路径 | POST | `/v1/video/generations` |
+| 视频任务查询 | GET | `/v1/videos/:task_id` |
+| 旧视频任务查询 | GET | `/v1/video/generations/:task_id` |
+| 视频内容获取 | GET | `/v1/videos/:task_id/content` |
+
+## 推荐调用链路
+
+### 图片生成
+
+1. 调用 `/v1/images/generations`
+2. 传入 `model`、`prompt`、可选的 `size`、`n`
+3. 从返回体读取图片 URL 或 Base64 结果
+
+### 视频生成
+
+1. 调用 `/v1/videos`
+2. 传入 `model`、`prompt` 和相关视频参数
+3. 从返回体拿到 `task_id`
+4. 轮询 `/v1/videos/:task_id`
+5. 成功后按需访问 `/v1/videos/:task_id/content`
+
+## 已集成模型范围
+
+当前文档优先覆盖这些模型族：
+
+- **文生图片**：image2、OG image2、Kling、Vidu
+- **文生视频**：Seedance、Kling 3.0、Vidu q3

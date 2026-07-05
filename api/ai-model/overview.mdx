@@ -1,0 +1,50 @@
+---
+title: "AI 模型接口概览"
+description: "New API 支持的 AI 模型接口协议总览"
+sidebarTitle: "概览"
+---
+
+New API 兼容多种主流 AI 服务的 API 协议，客户端可通过统一入口调用不同厂商的模型。本节介绍支持的接口类型与通用调用方式。
+
+## 支持的接口协议
+
+| 协议 | 说明 | 典型端点 |
+| --- | --- | --- |
+| OpenAI 对话 | 兼容 OpenAI Chat Completions | `/v1/chat/completions` |
+| OpenAI Responses | 兼容 OpenAI Responses API | `/v1/responses` |
+| OpenAI Embedding | 文本向量化 | `/v1/embeddings` |
+| OpenAI Image | 图像生成 | `/v1/images/generations` |
+| OpenAI Audio | 语音识别 / 合成 | `/v1/audio/speech`、`/v1/audio/transcriptions` |
+| Anthropic Claude | 兼容 Messages API | `/v1/messages` |
+| Google Gemini | 兼容 Generative Language API | `/v1beta/models/{model}:generateContent` |
+| Midjourney Proxy | 兼容 midjourney-proxy | `/mj/submit/imagine` 等 |
+| Suno 音乐 | 兼容 Suno API | `/suno/submit/music` 等 |
+| Rerank | 文本重排序 | `/v1/rerank` |
+
+## 通用请求方式
+
+所有接口均通过 `Authorization: Bearer <令牌>` 进行鉴权，令牌可在个人中心创建。
+
+```bash
+curl https://your-domain.com/v1/chat/completions \
+  -H "Authorization: Bearer sk-xxxx" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-4o",
+    "messages": [{"role": "user", "content": "你好"}]
+  }'
+```
+
+## 返回格式
+
+返回格式与对应上游厂商保持一致，便于现有 SDK 直接接入。错误响应遵循 OpenAI 错误结构：
+
+```json
+{
+  "error": {
+    "message": "错误描述",
+    "type": "invalid_request_error",
+    "code": "invalid_api_key"
+  }
+}
+```

@@ -1,0 +1,68 @@
+---
+title: "用户管理"
+description: "用户相关接口"
+sidebarTitle: "用户"
+---
+
+## 获取用户列表
+
+**GET** `/api/user/?p={page}&page_size={size}`
+
+返回当前分页的用户列表。
+
+## 获取用户详情
+
+**GET** `/api/user/{id}`
+
+## 搜索用户
+
+**GET** `/api/user/search?keyword={keyword}`
+
+## 创建用户
+
+**POST** `/api/user/`
+
+```json
+{
+  "username": "alice",
+  "password": "password123",
+  "display_name": "Alice"
+}
+```
+
+## 更新用户
+
+**PUT** `/api/user/`
+
+```json
+{
+  "id": 1,
+  "username": "alice",
+  "display_name": "Alice Doe",
+  "group": "vip",
+  "quota": 10000000
+}
+```
+
+## 删除用户
+
+**DELETE** `/api/user/{id}`
+
+## 分配额度
+
+**POST** `/api/user/manage`
+
+```json
+{
+  "username": "alice",
+  "action": "enable"
+}
+```
+
+`action` 可选：`disable`、`enable`、`delete`、`promote`、`demote`。
+
+## 刷新用户额度
+
+**GET** `/api/user/self`
+
+返回当前登录用户信息与剩余额度。

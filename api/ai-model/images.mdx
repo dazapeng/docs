@@ -1,0 +1,31 @@
+---
+title: "图像生成 Images"
+description: "文本生成图像接口"
+sidebarTitle: "图像生成"
+---
+
+**POST** `/v1/images/generations`
+
+## 请求参数
+
+| 参数 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `model` | string | 是 | 如 `dall-e-3`、`gpt-image-1` |
+| `prompt` | string | 是 | 图像描述 |
+| `n` | integer | 否 | 生成数量 |
+| `size` | string | 否 | `1024x1024`、`1792x1024` 等 |
+| `quality` | string | 否 | `standard` 或 `hd` |
+| `response_format` | string | 否 | `url` 或 `b64_json` |
+
+## 示例
+
+```bash
+curl https://your-domain.com/v1/images/generations \
+  -H "Authorization: Bearer sk-xxxx" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "dall-e-3",
+    "prompt": "一只在月球上的猫",
+    "size": "1024x1024"
+  }'
+```

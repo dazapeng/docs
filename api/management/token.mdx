@@ -1,0 +1,58 @@
+---
+title: "令牌管理"
+description: "API 令牌相关接口"
+sidebarTitle: "令牌"
+---
+
+## 获取令牌列表
+
+**GET** `/api/token/?p={page}&size={size}`
+
+## 获取令牌详情
+
+**GET** `/api/token/{id}`
+
+## 创建令牌
+
+**POST** `/api/token/`
+
+```json
+{
+  "name": "my-token",
+  "remain_quota": 500000,
+  "expired_time": -1,
+  "unlimited_quota": false,
+  "model_limits_enabled": false,
+  "model_limits": "",
+  "group": "default"
+}
+```
+
+| 字段 | 说明 |
+| --- | --- |
+| `name` | 令牌名称 |
+| `remain_quota` | 剩余额度（单位为积分） |
+| `expired_time` | 过期时间戳，`-1` 为永不过期 |
+| `unlimited_quota` | 是否不限额度 |
+| `model_limits_enabled` | 是否启用模型限制 |
+| `model_limits` | 允许模型列表，逗号分隔 |
+
+## 更新令牌
+
+**PUT** `/api/token/`
+
+## 删除令牌
+
+**DELETE** `/api/token/{id}`
+
+## 批量创建
+
+**POST** `/api/token/batch`
+
+```json
+{
+  "count": 10,
+  "name": "batch",
+  "remain_quota": 100000
+}
+```

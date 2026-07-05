@@ -1,0 +1,60 @@
+---
+title: "渠道管理"
+description: "上游渠道相关接口"
+sidebarTitle: "渠道"
+---
+
+## 获取渠道列表
+
+**GET** `/api/channel/?p={page}&page_size={size}`
+
+## 获取渠道详情
+
+**GET** `/api/channel/{id}`
+
+## 创建渠道
+
+**POST** `/api/channel/`
+
+```json
+{
+  "name": "openai-main",
+  "type": 1,
+  "key": "sk-xxxxxx",
+  "base_url": "https://api.openai.com",
+  "models": "gpt-4o,gpt-4o-mini",
+  "groups": "default,vip",
+  "priority": 0,
+  "weight": 1
+}
+```
+
+| 字段 | 说明 |
+| --- | --- |
+| `type` | 渠道类型（1=OpenAI, 3=Azure, 14=Anthropic, 24=Gemini 等） |
+| `key` | 上游 API Key |
+| `base_url` | 自定义代理地址 |
+| `models` | 支持模型，逗号分隔 |
+| `groups` | 归属分组 |
+| `priority` | 优先级 |
+| `weight` | 权重 |
+
+## 更新渠道
+
+**PUT** `/api/channel/`
+
+## 删除渠道
+
+**DELETE** `/api/channel/{id}`
+
+## 测试渠道
+
+**GET** `/api/channel/test/{id}?model={model}`
+
+## 批量删除失效渠道
+
+**DELETE** `/api/channel/disabled`
+
+## 更新渠道余额
+
+**GET** `/api/channel/update_balance/{id}`

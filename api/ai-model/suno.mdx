@@ -1,0 +1,34 @@
+---
+title: "Suno 音乐生成"
+description: "Suno 音乐生成接口"
+sidebarTitle: "Suno"
+---
+
+## 提交任务
+
+| 接口 | 方法 | 说明 |
+| --- | --- | --- |
+| `/suno/submit/music` | POST | 生成音乐（歌词模式） |
+| `/suno/submit/lyrics` | POST | 生成歌词 |
+| `/suno/submit/uploads` | POST | 上传音频 |
+
+## 查询任务
+
+| 接口 | 方法 | 说明 |
+| --- | --- | --- |
+| `/suno/fetch/{id}` | GET | 查询任务 |
+| `/suno/fetch` | POST | 批量查询 |
+
+## 示例
+
+```bash
+curl https://your-domain.com/suno/submit/music \
+  -H "Authorization: Bearer sk-xxxx" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "一首关于夏天的流行歌曲",
+    "mv": "chirp-v3-5",
+    "title": "Summer",
+    "tags": "pop, upbeat"
+  }'
+```

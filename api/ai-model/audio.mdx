@@ -1,0 +1,45 @@
+---
+title: "语音接口 Audio"
+description: "语音合成与语音识别"
+sidebarTitle: "语音接口"
+---
+
+## 语音合成 TTS
+
+**POST** `/v1/audio/speech`
+
+| 参数 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `model` | string | 是 | 如 `tts-1`、`tts-1-hd` |
+| `input` | string | 是 | 待合成的文本 |
+| `voice` | string | 是 | `alloy`、`echo`、`fable`、`onyx`、`nova`、`shimmer` |
+| `response_format` | string | 否 | `mp3`、`opus`、`aac`、`flac` |
+| `speed` | number | 否 | 0.25 ~ 4.0 |
+
+```bash
+curl https://your-domain.com/v1/audio/speech \
+  -H "Authorization: Bearer sk-xxxx" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"tts-1","input":"你好","voice":"alloy"}' \
+  --output speech.mp3
+```
+
+## 语音识别 STT
+
+**POST** `/v1/audio/transcriptions`
+
+以 `multipart/form-data` 上传：
+
+| 字段 | 必填 | 说明 |
+| --- | --- | --- |
+| `file` | 是 | 音频文件 |
+| `model` | 是 | 如 `whisper-1` |
+| `language` | 否 | ISO-639-1 |
+| `response_format` | 否 | `json`、`text`、`srt`、`vtt` |
+
+```bash
+curl https://your-domain.com/v1/audio/transcriptions \
+  -H "Authorization: Bearer sk-xxxx" \
+  -F file="@audio.mp3" \
+  -F model="whisper-1"
+```

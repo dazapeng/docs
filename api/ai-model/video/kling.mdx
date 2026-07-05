@@ -1,0 +1,118 @@
+---
+title: "Kling 可灵视频"
+description: "快手 Kling 视频生成接口"
+sidebarTitle: "Kling"
+---
+
+AiSDK 当前对外保留了 Kling 风格兼容专用路由，适合已有 Kling 格式客户端直接接入。
+
+## 支持的路由
+
+- 文生视频：`POST /kling/v1/videos/text2video`
+- 图生视频：`POST /kling/v1/videos/image2video`
+- 查询文生视频任务：`GET /kling/v1/videos/text2video/{task_id}`
+- 查询图生视频任务：`GET /kling/v1/videos/image2video/{task_id}`
+
+<Note>
+  你给的参考文档里有 `video-extend`，但当前 AiSDK 路由层并没有暴露 `/kling/v1/videos/video-extend`，因此这里不把它写成当前平台正式能力。
+</Note>
+
+## 文生视频
+
+### 请求参数
+
+| 参数 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `model_name` | string | 否 | 如 `kling-v1`、`kling-v1-6`、`kling-v2-master` |
+| `model` | string | 否 | 与 `model_name` 二选一，AiSDK 兼容这两种写法 |
+| `prompt` | string | 是 | 提示词 |
+| `negative_prompt` | string | 否 | 负面提示词 |
+| `cfg_scale` | number | 否 | 提示词相关性参数 |
+| `mode` | string | 否 | 如 `std` 或 `pro` |
+| `aspect_ratio` | string | 否 | `16:9`、`9:16`、`1:1` |
+| `duration` | string | 否 | 常见为 `5` 或 `10` |
+| `callback_url` | string | 否 | 回调地址 |
+
+### 示例
+
+```bash
+curl https://your-domain.com/kling/v1/videos/text2video \
+  -H "Authorization: Bearer sk-xxxx" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model_name": "kling-v1-6",
+    "prompt": "一位宇航员在月球表面行走",
+    "mode": "pro",
+    "aspect_ratio": "16:9",
+    "duration": "5"
+  }'
+```
+
+## 图生视频
+
+**POST** `/kling/v1/videos/image2video`
+
+| 参数 | 必填 | 说明 |
+| --- | --- | --- |
+| `image` | 是 | 首帧图，通常传 URL |
+| `image_tail` | 否 | 尾帧图 |
+| `prompt` | 否 | 提示词 |
+| `mode` | 否 | `std` / `pro` |
+| `duration` | 否 | `5` / `10` |
+
+### 示例
+
+```bash
+curl https://your-domain.com/kling/v1/videos/image2video \
+  -H "Authorization: Bearer sk-xxxx" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model_name": "kling-v2-master",
+    "image": "https://example.com/input.png",
+    "prompt": "镜头慢慢推近",
+    "mode": "pro",
+    "duration": "5"
+  }'
+```
+
+## 响应
+
+Kling 兼容路由在 AiSDK 内部会先转成统一视频任务链路，再进入渠道分发；对调用方仍然保留 Kling 风格的请求入口。提交后，请先保存 `task_id`。
+
+典型任务查询结果可理解为类似：
+
+```json
+{
+  "id": "task_xxxxxxxx",
+  "object": "video",
+  "status": "completed",
+  "progress": 100,
+  "created_at": 1712000000,
+  "completed_at": 1712000028,
+  "metadata": {
+    "url": "https://.../output.mp4"
+  }
+}
+```
+
+## 查询任务
+
+- `GET /kling/v1/videos/text2video/{task_id}`
+- `GET /kling/v1/videos/image2video/{task_id}`
+
+## 任务状态
+
+| 状态 | 说明 |
+| --- | --- |
+| `queued` | 排队中 |
+| `in_progress` | 生成中 |
+| `completed` | 已完成 |
+| `failed` | 失败 |
+
+## 什么时候用这个接口
+
+- 你已有 Kling 风格的历史客户端
+- 你希望尽量少改字段名，例如继续使用 `model_name`
+- 你希望继续沿用 `/kling/v1/videos/...` 这套外部协议，但不关心内部具体落到官方 Kling 还是腾讯等渠道
+
+如果没有历史包袱，仍然建议优先统一到 `/v1/videos`。

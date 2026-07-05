@@ -1,0 +1,30 @@
+---
+title: "重排序 Rerank"
+description: "文本相关性重排序"
+sidebarTitle: "Rerank"
+---
+
+**POST** `/v1/rerank`
+
+## 请求参数
+
+| 参数 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `model` | string | 是 | 如 `rerank-multilingual-v3.0` |
+| `query` | string | 是 | 查询语句 |
+| `documents` | array | 是 | 待排序文档列表 |
+| `top_n` | integer | 否 | 返回前 N 条 |
+
+## 示例
+
+```bash
+curl https://your-domain.com/v1/rerank \
+  -H "Authorization: Bearer sk-xxxx" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "rerank-multilingual-v3.0",
+    "query": "什么是量子纠缠",
+    "documents": ["量子力学基础", "经典力学", "量子纠缠的原理"],
+    "top_n": 2
+  }'
+```

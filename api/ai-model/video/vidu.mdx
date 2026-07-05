@@ -1,0 +1,124 @@
+---
+title: "Vidu 视频生成"
+description: "生数科技 Vidu 视频生成接口"
+sidebarTitle: "Vidu"
+---
+
+Vidu 支持文生视频、图生视频以及多种扩展生成模式。AiSDK 对外推荐通过统一视频入口接入，而不是直接暴露上游 `/ent/v2/...` 原生路径。
+
+## AiSDK 推荐入口
+
+- 提交任务：`POST /v1/videos`
+- 兼容旧路径：`POST /v1/video/generations`
+- 查询任务：`GET /v1/videos/{task_id}`
+- 获取结果：`GET /v1/videos/{task_id}/content`
+
+## 文生视频
+
+### 请求参数
+
+| 参数 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `model` | string | 是 | 平台开放给你的 Vidu 模型名，例如 `vidu q3`、`vidu q3-pro`、`vidu q3-turbo` |
+| `prompt` | string | 是 | 提示词 |
+| `duration` | integer | 否 | 常见时长，如 4、8 |
+| `seed` | integer | 否 | 随机种子 |
+| `aspect_ratio` | string | 否 | `16:9`、`9:16`、`1:1` |
+| `resolution` | string | 否 | `360p`、`720p`、`1080p` |
+| `movement_amplitude` | string | 否 | `auto`、`small`、`medium`、`large` |
+| `images` | array | 否 | 图生视频或参考图场景时使用 |
+| `metadata` | object | 否 | 透传扩展参数 |
+
+### 示例
+
+```bash
+curl https://your-domain.com/v1/videos \
+  -H "Authorization: Bearer sk-xxxx" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "vidu q3",
+    "prompt": "海边日落，海鸥飞过",
+    "duration": 4,
+    "aspect_ratio": "16:9",
+    "resolution": "720p"
+  }'
+```
+
+## 图生视频
+
+如果当前平台为这个模型开放了图生视频能力，通常继续走统一入口，只是在请求中补图像字段。
+
+| 参数 | 必填 | 说明 |
+| --- | --- | --- |
+| `images` | 是 | 图片 URL 数组，常见为 1 张 |
+| `prompt` | 否 | 提示词 |
+| `duration` | 否 | 时长 |
+
+### 示例
+
+```bash
+curl https://your-domain.com/v1/videos \
+  -H "Authorization: Bearer sk-xxxx" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "vidu q3",
+    "prompt": "镜头缓慢推进，人物转头微笑",
+    "images": ["https://example.com/first-frame.png"],
+    "duration": 4
+  }'
+```
+
+## 响应
+
+提交后，AiSDK 会先返回统一任务摘要：
+
+```json
+{
+  "task_id": "task_xxxxxxxx",
+  "status": "queued"
+}
+```
+
+## 查询任务
+
+**GET** `/v1/videos/{task_id}`
+
+典型查询结果：
+
+```json
+{
+  "id": "task_xxxxxxxx",
+  "task_id": "task_xxxxxxxx",
+  "object": "video",
+  "status": "completed",
+  "progress": 100,
+  "created_at": 1712000000,
+  "completed_at": 1712000028,
+  "metadata": {
+    "url": "https://.../output.mp4"
+  }
+}
+```
+
+## 下载结果
+
+```bash
+curl -L https://your-domain.com/v1/videos/task_xxxxxxxx/content \
+  -H "Authorization: Bearer sk-xxxx" \
+  -o output.mp4
+```
+
+## 任务状态
+
+| 状态 | 说明 |
+| --- | --- |
+| `queued` | 排队中 |
+| `in_progress` | 生成中 |
+| `completed` | 已完成 |
+| `failed` | 失败 |
+
+## 接入建议
+
+- Vidu 在 AiSDK 内部已经支持多种模型变体与响应转换，但客户端只需要记住平台公开模型名。
+- 第一次接入建议先跑通文生视频，再补 `images`、`movement_amplitude` 这类扩展字段。
+- 如果你要给客户稳定开放能力，建议先固定一套公开模型名，不要直接暴露供应商内部版本号。
