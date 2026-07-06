@@ -55,7 +55,14 @@
           "api/ai-model/midjourney",
           "api/ai-model/suno",
           "api/ai-model/rerank",
-          "api/ai-model/video/seedance",
+          {
+            "group": "Seedance",
+            "pages": [
+              "api/ai-model/video/seedance",
+              "api/ai-model/video/seedance-guide",
+              "api/ai-model/video/seedance-prompts"
+            ]
+          },
           "api/ai-model/video/kling",
           "api/ai-model/video/vidu"
         ]
