@@ -25,12 +25,15 @@ AiSDK 当前对外保留了 Kling 风格兼容专用路由，适合已有 Kling 
 | --- | --- | --- | --- |
 | `model_name` | string | 否 | 如 `kling-v1`、`kling-v1-6`、`kling-v2-master` |
 | `model` | string | 否 | 与 `model_name` 二选一，AiSDK 兼容这两种写法 |
+| `model_version` | string | 否 | 模型版本，如 `3.1-fast` |
 | `prompt` | string | 是 | 提示词 |
 | `negative_prompt` | string | 否 | 负面提示词 |
+| `enhance_prompt` | string | 否 | 提示词增强开关，`Enabled` / `Disabled` |
 | `cfg_scale` | number | 否 | 提示词相关性参数 |
 | `mode` | string | 否 | 如 `std` 或 `pro` |
 | `aspect_ratio` | string | 否 | `16:9`、`9:16`、`1:1` |
 | `duration` | string | 否 | 常见为 `5` 或 `10` |
+| `audio_generation` | string | 否 | 是否生成音频，`Enabled` / `Disabled` |
 | `callback_url` | string | 否 | 回调地址 |
 
 ### 示例
@@ -57,8 +60,11 @@ curl https://your-domain.com/kling/v1/videos/text2video \
 | `image` | 是 | 首帧图，通常传 URL |
 | `image_tail` | 否 | 尾帧图 |
 | `prompt` | 否 | 提示词 |
+| `negative_prompt` | 否 | 负面提示词 |
+| `enhance_prompt` | 否 | 提示词增强开关，`Enabled` / `Disabled` |
 | `mode` | 否 | `std` / `pro` |
 | `duration` | 否 | `5` / `10` |
+| `audio_generation` | 否 | 是否生成音频，`Enabled` / `Disabled` |
 
 ### 示例
 
@@ -113,6 +119,25 @@ Kling 兼容路由在 AiSDK 内部会先转成统一视频任务链路，再进�
 
 - 你已有 Kling 风格的历史客户端
 - 你希望尽量少改字段名，例如继续使用 `model_name`
-- 你希望继续沿用 `/kling/v1/videos/...` 这套外部协议，但不关心内部具体落到官方 Kling 还是腾讯等渠道
+- 你希望继续沿用 `/kling/v1/videos/...` 这套外部协议，但不关心内部具体落到哪个上游渠道
 
 如果没有历史包袱，仍然建议优先统一到 `/v1/videos`。
+
+## 上游渠道说明
+
+AiSDK 会将 Kling 风格请求转换为上游渠道的 AIGC 视频任务；调用方仍然使用现有 Kling 风格字段，无需处理上游签名与鉴权。
+
+| Kling 字段 | 上游字段 | 说明 |
+| --- | --- | --- |
+| `model_name` / `model` | `ModelName` | 平台侧固定映射为对应上游模型标识 |
+| `model_version` | `ModelVersion` | 如 `3.1-fast` |
+| `prompt` | `Prompt` | 提示词 |
+| `negative_prompt` | `NegativePrompt` | 负面提示词 |
+| `enhance_prompt` | `EnhancePrompt` | `Enabled` / `Disabled` |
+| `image` | `FileInfos[].FileId` | 首帧图，平台内部完成上传与 FileId 转换 |
+| `image_tail` | `LastFrameFileId` | 尾帧图 |
+| `aspect_ratio` | `OutputConfig.AspectRatio` | `16:9`、`9:16`、`1:1` |
+| `audio_generation` | `OutputConfig.AudioGeneration` | `Enabled` / `Disabled` |
+| `callback_url` | 平台内部处理 | 平台完成任务态同步后回调 |
+
+提交成功后，上游返回的 `TaskId` 会转换为统一的 `task_id` 返回给调用方，后续查询仍走 `/kling/v1/videos/text2video/{task_id}` 或 `/kling/v1/videos/image2video/{task_id}`。
