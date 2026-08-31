@@ -50,8 +50,8 @@
           {
             "group": "Seedance",
             "pages": [
-              "api/ai-model/video/seedance",
               "api/ai-model/video/seedance-guide",
+              "api/ai-model/video/seedance",
               "api/ai-model/video/seedance-prompts"
             ]
           },
