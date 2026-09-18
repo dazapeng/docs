@@ -1,0 +1,112 @@
+---
+title: "MiniMax 任务查询与下载"
+description: "查询 MiniMax 视频生成任务、处理异步状态、读取 output.video_url 并下载视频"
+sidebarTitle: "任务查询与下载"
+---
+
+调用 `POST /v1/videos` 后，保存响应中的公开任务 `id`。查询与下载均使用该 ID，并携带有权访问该任务的平台 API Key。
+
+## 查询任务
+
+```http
+GET /v1/videos/{task_id}
+Authorization: Bearer <你的平台 API Key>
+```
+
+```bash
+export BASE_URL="https://ai.xihuyun.com"
+export API_KEY="sk-替换为你的平台APIKey"
+export TASK_ID="替换为提交响应中的id"
+
+curl --silent --show-error --fail-with-body "$BASE_URL/v1/videos/$TASK_ID" \
+  -H "Authorization: Bearer $API_KEY"
+```
+
+### 状态与后续动作
+
+| `status` | 含义 | 客户端动作 |
+| --- | --- | --- |
+| `queued` | 排队中 | 等待后继续查询 |
+| `in_progress` | 生成中 | 等待后继续查询 |
+| `completed` | 生成完成 | 读取 `output.video_url` 或下载视频，停止轮询 |
+| `failed` | 生成失败 | 读取 `error.code` 和 `error.message`，停止轮询 |
+
+建议从每 3 秒查询一次开始，并给自己的客户端设置总等待时限。发生限流时降低查询频率。客户端等待超时不代表生成失败，保存任务 ID 后仍可继续查询；不要自动重新提交生成任务。
+
+查询结果可能暂时保留最近一次已知状态，不保证每次查询都能取得新的上游进度。查询接口找不到任务时，可能返回 HTTP `400` 和 `task_not_exist`；不要只用 `404` 判断任务是否存在。
+
+### 生成完成
+
+以下示例仅展示关键字段，URL 和任务 ID 均为占位值：
+
+```json
+{
+  "id": "task_example",
+  "object": "video.generation",
+  "model": "MiniMax-H3-Turbo",
+  "status": "completed",
+  "progress": 100,
+  "output": {
+    "video_url": "https://cdn.example.com/result.mp4"
+  },
+  "error": null
+}
+```
+
+| 字段 | 说明 |
+| --- | --- |
+| `id` | 网关公开任务 ID |
+| `object` | 统一视频任务类型 `video.generation` |
+| `status` | 任务状态；以此判断是否成功，不只看 HTTP 状态或进度 |
+| `progress` | 网关按任务状态给出的进度值，不是上游真实完成百分比；失败时也可能为 `100` |
+| `output.video_url` | 主要视频结果地址；不要从 `metadata` 查找视频 URL |
+| `error` | 无错误时为 `null`；失败时包含错误信息 |
+| `created_at`、`completed_at` | 返回时为 Unix 秒时间戳，字段可能缺省 |
+
+### 生成失败
+
+查询请求本身可以返回 HTTP `200`，但任务状态为 `failed`。此时仍应按生成失败处理：
+
+```json
+{
+  "id": "task_example",
+  "object": "video.generation",
+  "model": "MiniMax-H3-Turbo",
+  "status": "failed",
+  "progress": 100,
+  "error": {
+    "code": "1026",
+    "message": "1026: sensitive content"
+  }
+}
+```
+
+错误码和进度仅作格式示例，以实际响应为准。处理方式见 [错误处理](/api/ai-model/video/minimax-errors)。
+
+## 下载已完成的视频
+
+确认任务已完成后，再请求内容接口：
+
+```http
+GET /v1/videos/{task_id}/content
+Authorization: Bearer <你的平台 API Key>
+```
+
+```bash
+curl --fail --location --silent --show-error \
+  "$BASE_URL/v1/videos/$TASK_ID/content" \
+  -H "Authorization: Bearer $API_KEY" \
+  --output result.mp4
+```
+
+`--fail` 使 HTTP 错误返回非零退出码，避免把错误响应当成成功视频。检查退出码后再使用文件；网络中断可能留下不完整文件。
+
+你也可以在自己的服务端获取 `output.video_url` 指向的资源。不要向第三方结果域名发送平台 API Key；带鉴权的 `/content` 接口用于通过网关访问结果。
+
+内容接口在任务尚未完成时返回 HTTP `400`，任务不存在或不可访问时返回 `404`。此接口的错误位于 `error.message` 和 `error.type`，不保证提供 `error.code`。
+
+## 客户端处理流程
+
+提交一次任务，保存 `id`，然后只查询该任务。遇到 `completed` 时检查视频地址并下载；遇到 `failed` 时记录错误码并停止。其他状态不能当作成功。
+
+连接超时、网络中断或暂时性服务错误并不能证明生成任务没有被受理。在没有明确结果时，应先核查已有任务和平台记录，再决定是否重新生成，避免重复提交和重复费用。

@@ -1,0 +1,162 @@
+---
+title: "MiniMax 快速开始与生成示例"
+description: "使用 curl 调用 MiniMax H3：文生视频、首尾帧图生视频、多模态参考，以及公开任务 ID 的使用方法"
+sidebarTitle: "快速开始与示例"
+---
+
+以下示例使用 XiHuYun 的统一视频入口和 MiniMax H3 v2 原生 `content` 数组。每次成功受理的生成请求都可能产生费用，请先确认当前模型和分辨率的价格。
+
+## 1. 准备 API Key
+
+在平台控制台创建可调用目标模型的 API Key，并在自己的服务端设置环境变量：
+
+```bash
+export BASE_URL="https://ai.xihuyun.com"
+export API_KEY="sk-替换为你的平台APIKey"
+```
+
+本例的 `BASE_URL` 不带 `/v1`。将 API Key 保存在服务端，不要写入浏览器代码或公开仓库。
+
+## 2. 选择一种生成模式
+
+示例默认使用 `MiniMax-H3-Turbo`。你也可以替换为当前账号已开放的模型，并遵守对应的 [分辨率与时长范围](/api/ai-model/video/minimax#模型与参数范围)。
+
+<Tabs>
+<Tab title="文生视频">
+
+只提供文本内容项，显式设置固定画面比例：
+
+```bash
+curl --silent --show-error --fail-with-body "$BASE_URL/v1/videos" \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "MiniMax-H3-Turbo",
+    "content": [
+      {
+        "type": "text",
+        "text": "一只橘猫在阳光下的窗台上伸懒腰，镜头缓慢推进，自然光，电影质感"
+      }
+    ],
+    "resolution": "768P",
+    "duration": 6,
+    "ratio": "16:9"
+  }'
+```
+
+提示词已经位于 `content[].text`，无需再加顶层 `prompt`。
+
+</Tab>
+<Tab title="首尾帧图生视频">
+
+把两张图片分别标记为 `first_frame` 和 `last_frame`。本例省略 `ratio`，交给上游根据输入图片处理。
+
+<Warning>
+  执行前，请把以下首帧、尾帧 URL 替换为上游可访问的真实图片直链。
+</Warning>
+
+```bash
+curl --silent --show-error --fail-with-body "$BASE_URL/v1/videos" \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "MiniMax-H3-Turbo",
+    "content": [
+      {
+        "type": "text",
+        "text": "从首帧自然过渡到尾帧，保持人物外观和服装一致，动作连贯，运镜平稳"
+      },
+      {
+        "type": "image_url",
+        "image_url": {"url": "https://cdn.example.com/first.jpg"},
+        "role": "first_frame"
+      },
+      {
+        "type": "image_url",
+        "image_url": {"url": "https://cdn.example.com/last.jpg"},
+        "role": "last_frame"
+      }
+    ],
+    "resolution": "768P",
+    "duration": 6
+  }'
+```
+
+不要在同一示例中混入参考图片、参考视频或参考音频角色。具体素材组合限制由上游校验。
+
+</Tab>
+<Tab title="多模态参考">
+
+使用 `reference_image`、`reference_video` 和 `reference_audio` 分别提供人物外观、动作和音频参考。
+
+<Warning>
+  执行前，请将三个素材 URL 替换为网关和上游均可访问的图片、视频和音频直链。参考视频还必须能够读取真实时长。音频参考的具体生成效果由所选模型决定。
+</Warning>
+
+```bash
+curl --silent --show-error --fail-with-body "$BASE_URL/v1/videos" \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "MiniMax-H3-Turbo",
+    "content": [
+      {
+        "type": "text",
+        "text": "参考图片中的角色外观、视频中的动作和运镜、音频中的节奏，生成一段连贯的产品展示视频"
+      },
+      {
+        "type": "image_url",
+        "image_url": {"url": "https://cdn.example.com/person.jpg"},
+        "role": "reference_image"
+      },
+      {
+        "type": "video_url",
+        "video_url": {"url": "https://cdn.example.com/motion.mp4"},
+        "role": "reference_video"
+      },
+      {
+        "type": "audio_url",
+        "audio_url": {"url": "https://cdn.example.com/music.mp3"},
+        "role": "reference_audio"
+      }
+    ],
+    "resolution": "768P",
+    "duration": 6,
+    "ratio": "16:9"
+  }'
+```
+
+网关保留上述内容项的顺序、角色和字段。`duration` 表示输出视频时长，不是输入素材时长。
+
+</Tab>
+</Tabs>
+
+## 3. 保存公开任务 ID
+
+提交成功后会返回任务对象，而不是立即返回视频文件。以下仅展示关键字段，实际响应可能包含时间等附加字段：
+
+```json
+{
+  "id": "task_example",
+  "object": "video.generation",
+  "model": "MiniMax-H3-Turbo",
+  "status": "queued",
+  "progress": 0,
+  "error": null
+}
+```
+
+将返回的 `id` 保存为业务记录中的任务 ID。示例 `task_example` 不是可查询的真实任务，也不应替换成上游任务编号。
+
+```bash
+export TASK_ID="替换为提交响应中的id"
+
+curl --silent --show-error --fail-with-body "$BASE_URL/v1/videos/$TASK_ID" \
+  -H "Authorization: Bearer $API_KEY"
+```
+
+## 4. 获取视频
+
+建议从每 3 秒查询一次开始，在返回 `completed` 或 `failed` 后停止轮询。生成完成后，从 `output.video_url` 获取视频地址，或使用带鉴权的下载接口。
+
+完整状态说明和下载示例见 [任务查询与下载](/api/ai-model/video/minimax-tasks)。提交报错或任务失败时，按 [错误处理](/api/ai-model/video/minimax-errors) 读取错误码。

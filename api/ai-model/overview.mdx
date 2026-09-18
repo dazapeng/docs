@@ -20,6 +20,9 @@ New API 兼容多种主流 AI 服务的 API 协议，客户端可通过统一入
 | Midjourney Proxy | 兼容 midjourney-proxy | `/mj/submit/imagine` 等 |
 | Suno 音乐 | 兼容 Suno API | `/suno/submit/music` 等 |
 | Rerank | 文本重排序 | `/v1/rerank` |
+| MiniMax H3 视频 | 接收 v2 原生 `content[]`，返回统一视频任务 | `/v1/videos` |
+
+MiniMax 的文生视频、首尾帧图生视频和多模态参考，见 [MiniMax 接口说明](/api/ai-model/video/minimax) 和 [快速开始与生成示例](/api/ai-model/video/minimax-guide)。
 
 ## 通用请求方式
 
@@ -37,7 +40,9 @@ curl https://your-domain.com/v1/chat/completions \
 
 ## 返回格式
 
-返回格式与对应上游厂商保持一致，便于现有 SDK 直接接入。错误响应遵循 OpenAI 错误结构：
+对话等兼容接口使用对应协议的响应格式。MiniMax H3 视频使用网关统一任务格式：从 `id` 读取任务 ID，从 `output.video_url` 读取结果；任务提交错误、鉴权错误和异步失败的结构分别见 [MiniMax 错误处理](/api/ai-model/video/minimax-errors)。
+
+OpenAI 兼容接口的错误结构示例：
 
 ```json
 {

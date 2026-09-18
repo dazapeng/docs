@@ -36,8 +36,8 @@ AiSDK 对外优先提供 **OpenAI 兼容风格**接口。
 ### 视频生成
 
 1. 调用 `/v1/videos`
-2. 传入 `model`、`prompt` 和相关视频参数
-3. 从返回体拿到 `task_id`
+2. 传入 `model` 和相关视频参数；MiniMax H3 原生请求将提示词放在 `content[].text`，详见 [MiniMax 快速开始](/api/ai-model/video/minimax-guide)
+3. 从 `/v1/videos` 返回体的 `id` 字段拿到公开任务 ID，用作后续路径中的 `task_id`
 4. 轮询 `/v1/videos/:task_id`
 5. 成功后按需访问 `/v1/videos/:task_id/content`
 
@@ -46,4 +46,4 @@ AiSDK 对外优先提供 **OpenAI 兼容风格**接口。
 当前文档优先覆盖这些模型族：
 
 - **文生图片**：image2、OG image2、Kling、Vidu
-- **文生视频**：Seedance、Kling 3.0、Vidu q3
+- **文生视频**：Seedance、Kling 3.0、Vidu q3、[MiniMax H3 / H3-Max / H3-Turbo](/api/ai-model/video/minimax)

@@ -55,6 +55,15 @@
               "api/ai-model/video/seedance-prompts"
             ]
           },
+          {
+            "group": "MiniMax",
+            "pages": [
+              "api/ai-model/video/minimax",
+              "api/ai-model/video/minimax-guide",
+              "api/ai-model/video/minimax-tasks",
+              "api/ai-model/video/minimax-errors"
+            ]
+          },
           "api/ai-model/video/kling",
           "api/ai-model/video/vidu"
         ]

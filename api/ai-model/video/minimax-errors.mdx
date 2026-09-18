@@ -1,0 +1,108 @@
+---
+title: "MiniMax 错误处理"
+description: "区分 MiniMax 任务提交错误、网关鉴权错误与异步任务失败，正确处理错误码和重试"
+sidebarTitle: "错误处理"
+---
+
+接入时同时检查 HTTP 状态和响应体。任务提交错误、鉴权等中间件错误、异步生成失败可能使用不同的响应结构。
+
+## 任务提交错误
+
+视频任务处理层的错误使用顶层 `code`、`message` 和 `data`。例如，参数校验失败的结构如下，具体文案以实际响应为准：
+
+```json
+{
+  "code": "minimax_h3_resolution_invalid",
+  "message": "所选模型不支持该分辨率",
+  "data": null
+}
+```
+
+### 上游拒绝请求
+
+不能假定提交接口的顶层 `code` 总是上游业务错误码。上游返回非 HTTP `200` 时，当前提交链路会使用 `fail_to_fetch_task`，并将上游响应体放在 `message` 字符串中。以下为结构示意：
+
+```json
+{
+  "code": "fail_to_fetch_task",
+  "message": "{\"error\":{\"code\":\"INVALID_CONTENT_COMBINATION\",\"message\":\"content combination is not supported\"}}",
+  "data": null
+}
+```
+
+客户端应先读取网关 `code`。当它是 `fail_to_fetch_task` 时，保留 `message` 以供排查；只有字符串可解析为 JSON 时才进一步解析，且不要假定其中的上游错误结构固定。其他响应路径可能直接返回上游业务码，但不能依赖 `INVALID_CONTENT_COMBINATION` 必定出现在顶层。HTTP `429` 的文案还可能被替换，见下方说明。
+
+### 网关参数校验
+
+| 错误码 | 检查项 |
+| --- | --- |
+| `minimax_h3_prompt_required` | `content` 中是否至少有一个非空 `text` 内容项 |
+| `minimax_h3_content_invalid` | `content` 是否为非空数组；内容项类型和媒体 URL 结构是否正确 |
+| `minimax_h3_resolution_invalid` | 分辨率是否在当前模型支持的范围内 |
+| `minimax_h3_duration_invalid` | 时长是否为当前模型允许范围内的整数 |
+| `minimax_h3_ratio_invalid` | 比例是否为支持的固定比例或 `adaptive` |
+
+不是所有无效请求都会进入模型适配器。JSON 解析、鉴权、额度或路由阶段也可能提前报错，请读取实际返回的错误体。
+
+参数定义见 [接口说明](/api/ai-model/video/minimax)，正确请求示例见 [快速开始](/api/ai-model/video/minimax-guide)。
+
+### 参考视频无法读取
+
+当错误提示输入视频无法可靠获取时长时，检查素材直链是否可被网关访问、文件是否完整、媒体元数据是否可解析。不要通过随意填写 `duration_seconds` 绕过问题；用于素材计费的时长会从视频文件核对。
+
+## 鉴权等网关错误
+
+在进入视频任务处理前，鉴权或其他中间件可能返回带 `error` 的响应。例如：
+
+```json
+{
+  "error": {
+    "message": "错误描述，以实际返回为准",
+    "type": "错误类型，以实际返回为准",
+    "code": "错误码，以实际返回为准"
+  }
+}
+```
+
+客户端应兼容顶层 `code` / `message` 与嵌套 `error.code` / `error.message`。部分错误还可能缺少 `code`，此时保留 HTTP 状态与错误描述。
+
+下载接口 `/v1/videos/{task_id}/content` 的错误也使用嵌套 `error`，通常包含 `message` 和 `type`，不保证包含 `code`。
+
+## 异步生成失败
+
+创建任务成功只代表已受理。轮询返回 HTTP `200` 时，仍需检查 `status`：
+
+```json
+{
+  "id": "task_example",
+  "object": "video.generation",
+  "status": "failed",
+  "progress": 100,
+  "error": {
+    "code": "1026",
+    "message": "1026: sensitive content"
+  }
+}
+```
+
+这是结构示例，并非真实任务记录。任务为 `failed` 时停止轮询并处理错误；只有 `completed` 才表示生成完成。异步失败的 `error.code` 会优先使用可获得的上游错误码，缺少时可能回退为 `failed` 或 `cancelled`。不要用 `progress` 是否为 `100` 判断成功。
+
+## HTTP 状态与处理建议
+
+| HTTP 状态 | 处理建议 |
+| --- | --- |
+| `400` | 提交时检查 JSON、参数和素材；查询时还需检查是否为 `task_not_exist`；下载时检查任务是否已完成 |
+| `401` | 检查 Bearer API Key 是否有效、是否已过期 |
+| `403` | 检查当前账号、令牌的权限或额度，并以错误描述为准 |
+| `404` | 检查接口路径及公开任务 ID，也检查是否有权访问该任务 |
+| `429` | 根据错误体区分限流、额度或上游负载问题，降低频率后再处理 |
+| `5xx` | 记录响应和任务信息；核查是否已受理，避免盲目重发创建请求 |
+| `200` 且 `status=failed` | 读取任务对象中的 `error`，按生成失败处理 |
+
+在视频任务错误处理路径中，HTTP `429` 的文案可能被统一为“当前分组上游负载已饱和，请稍后再试”。其他中间件的 `429` 仍可能使用不同结构和文案。
+
+## 重试与排查
+
+参数错误应先修正请求。已经取得任务 ID 时，优先继续查询原任务，不要重新调用创建接口。提交超时或连接中断且没有收到 ID 时，应先核查平台记录，不能假设服务端没有创建任务。
+
+联系支持时提供请求时间、模型名、HTTP 状态、错误码、脱敏后的请求参数，以及已取得的公开任务 ID；响应中有请求追踪 ID 时一并保留。不要发送 API Key 或带有私密访问凭据的素材链接。

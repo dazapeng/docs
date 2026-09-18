@@ -1,0 +1,108 @@
+---
+title: "MiniMax H3 视频接口"
+description: "通过 XiHuYun 调用 MiniMax H3 v2：原生 content 数组、模型参数、鉴权与统一视频任务入口"
+sidebarTitle: "接口说明"
+---
+
+使用你的 XiHuYun API Key，提交 MiniMax H3 v2 格式的 `content` 数组，即可创建文生视频、首尾帧图生视频或多模态参考任务。
+
+首次接入请阅读 [快速开始与生成示例](/api/ai-model/video/minimax-guide)，复制示例后替换 API Key 和素材地址。
+
+## 接口地址与鉴权
+
+| 配置 | 值 |
+| --- | --- |
+| 网关域名 | `https://ai.xihuyun.com` |
+| 鉴权 | `Authorization: Bearer <你的平台 API Key>` |
+| 提交格式 | `Content-Type: application/json` |
+
+本栏目示例中的 `BASE_URL` 不包含 `/v1`。所有请求均使用平台 API Key。
+
+| 方法 | 路径 | 用途 |
+| --- | --- | --- |
+| `POST` | `/v1/videos` | 创建视频生成任务 |
+| `GET` | `/v1/videos/{task_id}` | 查询任务状态与结果 |
+| `GET` | `/v1/videos/{task_id}/content` | 下载已完成的视频 |
+
+<Note>
+  客户调用 `/v1/videos`。网关在内部将 H3 请求转发至上游 `/v2/video_generation`；上游路径不属于本栏目的客户调用入口。后续查询和下载使用网关返回的 `id`。
+</Note>
+
+## 模型与参数范围
+
+| `model` | `resolution` | `duration` |
+| --- | --- | --- |
+| `MiniMax-H3` | `768P`、`2K` | 4～15 秒的整数 |
+| `MiniMax-H3-Max` | `480P`、`768P` | 5～15 秒的整数 |
+| `MiniMax-H3-Turbo` | `480P`、`768P`、`2K` | 4～15 秒的整数 |
+
+以上为网关支持的参数范围。你实际可用的模型以平台对当前账号、API Key 和分组开放的配置为准；不同模型和分辨率的价格见 [平台价格页](https://ai.xihuyun.com/pricing)。
+
+本栏目介绍视频生成，不包含 `MiniMax-H3-Regeneration` 重生成接口。
+
+## 创建任务的请求体
+
+| 参数 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `model` | string | 是 | 使用当前账号可调用的 H3 模型名称 |
+| `content` | array | 是 | 非空数组，至少包含一个非空文本项 |
+| `resolution` | string | 是 | 使用上表中对应模型的分辨率 |
+| `duration` | integer | 是 | 输出视频时长，单位为秒 |
+| `ratio` | string | 按模式 | 文生视频请显式填写固定比例；其他模式按上游要求填写或省略 |
+| `callback_url` | string | 否 | 透传给上游的回调地址，详见下方回调说明 |
+| `aigc_watermark` | boolean | 否 | 按上游协议设置水印；显式传入 `false` 时会保留该值 |
+
+### 画面比例
+
+固定比例支持 `21:9`、`16:9`、`4:3`、`1:1`、`3:4`、`9:16`。网关还接收 `adaptive`，具体模式是否允许由上游决定。
+
+文生视频示例使用 `16:9`。首尾帧图生视频可以省略 `ratio`，交由上游根据输入图片处理。网关不会把你填写的固定比例替换为 `adaptive`，也不会为缺失的比例补值；缺失比例或素材组合不满足上游要求时，请按返回的业务错误调整。
+
+### `content` 内容项
+
+| 用途 | `type` | 内容字段 | `role` |
+| --- | --- | --- | --- |
+| 提示词 | `text` | `text` | 无需填写 |
+| 首帧 | `image_url` | `image_url` | `first_frame` |
+| 尾帧 | `image_url` | `image_url` | `last_frame` |
+| 参考图片 | `image_url` | `image_url` | `reference_image` |
+| 参考视频 | `video_url` | `video_url` | `reference_video` |
+| 参考音频 | `audio_url` | `audio_url` | `reference_audio` |
+
+提示词放在 `content[].text` 中，无需额外提供顶层 `prompt`。图片、视频和音频内容项均支持 URL 对象或裸字符串。以参考图片为例：
+
+<CodeGroup>
+
+```json URL 对象
+{
+  "type": "image_url",
+  "image_url": {"url": "https://cdn.example.com/reference.jpg"},
+  "role": "reference_image"
+}
+```
+
+```json URL 字符串
+{
+  "type": "image_url",
+  "image_url": "https://cdn.example.com/reference.jpg",
+  "role": "reference_image"
+}
+```
+
+</CodeGroup>
+
+请使用网关和上游均能够访问的素材直链。示例中的 `cdn.example.com` 为占位域名，需要替换为你自己的有效地址；本地文件路径和需要浏览器登录的网页地址不能作为这些示例的素材 URL。
+
+输入视频的素材计费会核对可读取的真实时长。无法下载或解析时长的参考视频可能在提交阶段被拒绝；手工填写素材时长不能代替有效的视频文件。原生生成示例无需额外添加 `duration_seconds`。
+
+## 原生请求的处理方式
+
+网关保留 `content` 项目的元素顺序、`role`、URL 表达方式以及内容项内未建模的字段。接入原生格式时，统一将提示词与素材写入 `content`，不要再依赖顶层 `prompt`、`images` 等扁平字段与它合并。
+
+网关会检查非空文本、内容项结构、支持的 `type` 和模型参数范围。转发给上游的 JSON 请求体上限为 64 MiB，这不是素材文件的总大小限制。素材角色组合、素材数量及具体媒体限制仍由上游判断。保留额外字段不代表上游一定接受它们，也不代表任意新增 `type` 或顶层参数都已受支持。
+
+## 回调与结果
+
+`callback_url` 作为上游参数透传。回调内容、签名和重试方式由上游定义，不应假定它返回网关统一任务对象或使用同一个公开任务 ID。首次接入建议按 [任务查询与下载](/api/ai-model/video/minimax-tasks) 轮询网关。
+
+生成结果从 `output.video_url` 获取。错误解析和重试原则见 [错误处理](/api/ai-model/video/minimax-errors)。
