@@ -23,7 +23,7 @@
         }
       ]
     },
-    "groups": [
+    "pages": [
       {
         "group": "Getting Started",
         "pages": [
@@ -47,14 +47,6 @@
           "api/ai-model/midjourney",
           "api/ai-model/suno",
           "api/ai-model/rerank",
-          {
-            "group": "Seedance",
-            "pages": [
-              "api/ai-model/video/seedance-guide",
-              "api/ai-model/video/seedance",
-              "api/ai-model/video/seedance-prompts"
-            ]
-          },
           {
             "group": "MiniMax",
             "pages": [
@@ -89,7 +81,8 @@
           "index",
           "quickstart"
         ]
-      }
+      },
+      "untitled-page"
     ]
   },
   "logo": {
