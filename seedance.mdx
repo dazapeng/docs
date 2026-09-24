@@ -1,6 +1,7 @@
 ---
+title: "Seedance"
 description: "西湖云平台 Seedance 视频生成与 Asset 素材库 API"
-title: "untitled-page"
+sidebarTitle: "Seedance"
 ---
 
 本文面向通过西湖云统一网关调用 Seedance 视频模型的开发者，覆盖视频任务提交、异步查询、结果下载、Asset 素材上传与管理，以及图片首帧和尾帧组合调用。
@@ -11,7 +12,7 @@ title: "untitled-page"
 - 所有请求使用平台 API Key：`Authorization: Bearer <API_KEY>`。
 - `model` 应使用平台模型页展示的可用模型名；需要固定渠道时，复制完整的渠道路由模型名。
 - Asset 上传和视频生成必须使用同一个 API Key。
-- Asset 引用统一使用上传响应中的完整 `data.asset_uri`，格式为 `asset://随机assetid`。不要自行添加 `xhy_` 前缀，也不要传对象存储 URL或预览 URL。
+- Asset 引用统一使用上传响应中的完整 `data.asset_uri`，格式为 `asset://随机assetid`。不要自行添加固定前缀，也不要传对象存储 URL或预览 URL。
 
 > 文档版本：2026-09-01 适用范围：本项目统一视频任务接口中的 Seedance / Doubao 视频模型
 
