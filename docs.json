@@ -45,6 +45,7 @@
           "api/ai-model/anthropic",
           "api/ai-model/gemini",
           "api/ai-model/midjourney",
+          "untitled-page",
           "api/ai-model/suno",
           "api/ai-model/rerank",
           {
@@ -81,8 +82,7 @@
           "index",
           "quickstart"
         ]
-      },
-      "untitled-page"
+      }
     ]
   },
   "logo": {
