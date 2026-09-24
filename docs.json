@@ -65,7 +65,8 @@
             ]
           },
           "api/ai-model/video/kling",
-          "api/ai-model/video/vidu"
+          "api/ai-model/video/vidu",
+          "minimax"
         ]
       },
       {
